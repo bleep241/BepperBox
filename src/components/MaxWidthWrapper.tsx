@@ -8,7 +8,7 @@ type Props = {
 
 const MaxWidthWrapper = ({className, children}: Props) => {
   return (
-    <div className={cn("h-full mx-auto w-full max-w-screen-xl px-2.5 md:px-20", className)}>
+    <div className={cn("h-full mx-auto w-full max-w-screen-xl px-2.5 md:px-20 border-2 border-red-700", className)}>
       {children}
     </div>
   )

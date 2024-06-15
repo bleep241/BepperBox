@@ -179,19 +179,19 @@ export default function Home() {
 
           <ul className="mx-auto mt-12 max-w-prose sm:text-lg space-y-2 w-fit">
             <li className="w-fit">
-              <Check className="size-5 text-yellowbg-yellow-800 inline mr-1.5" />
+              <Check className="size-5 text-yellow-800 bg-slate-50 inline mr-1.5" />
               High-quality silicone material
             </li>
             <li className="w-fit">
-              <Check className="size-5 text-yellowbg-yellow-800 inline mr-1.5" />
+              <Check className="size-5 text-yellow-800 bg-slate-50 inline mr-1.5" />
               Scratch and fingerprint resistant coating
             </li>
             <li className="w-fit">
-              <Check className="size-5 text-yellowbg-yellow-800 inline mr-1.5" />
+              <Check className="size-5 text-yellow-800 bg-slate-50 inline mr-1.5" />
               Wireless charging compatible
             </li>
             <li className="w-fit">
-              <Check className="size-5 text-yellowbg-yellow-800 inline mr-1.5" />
+              <Check className="size-5 text-yellow-800 bg-slate-50 inline mr-1.5" />
               5 year print warranty
             </li>
 
