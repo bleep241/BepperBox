@@ -34,13 +34,16 @@ const Page = async ({ searchParams }: PageProps) => {
     return notFound();
   }
 
-  const { imageUrl, width, height } = configuration;
+  const { imageUrl, width, height, } = configuration;
 
 
   // as the user drags the image around on the design template, we don't want to send all those inputs to the server 
   // need to handle that in a client side component
   return (
-    <DesignConfigurator />
+    <DesignConfigurator configId={configuration.id} imageDimensions={{
+      width,
+      height,
+    }} imageUrl={imageUrl} />
   )
 }
 
