@@ -1,19 +1,21 @@
 "use client"
 
-import React, { useState } from 'react'
+import { useState, useRef } from 'react';
+import HandleComponent from '@/components/HandleComponent';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { BASE_PRICE } from '@/config/products';
 import { cn, formatPrice } from '@/lib/utils';
+import { COLORS, FINISHES, MATERIALS, MODELS } from '@/validators/option-validator';
+import { RadioGroup } from '@headlessui/react';
+import { ArrowRight, Check, ChevronsUpDown } from 'lucide-react';
 import NextImage from "next/image";
 import { Rnd } from "react-rnd";
-import HandleComponent from '@/components/HandleComponent';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { RadioGroup } from '@headlessui/react';
-import { COLORS, MODELS, MATERIALS, FINISHES } from '@/validators/option-validator';
-import { Label } from '@/components/ui/label';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, ChevronsUpDown, Radio } from 'lucide-react';
-import { BASE_PRICE } from '@/config/products';
+import { useUploadThing } from '@/lib/uploadthing';
+import { useToast } from '@/components/ui/use-toast';
 
 interface DesignConfiguratorProps {
   configId: string;
@@ -23,6 +25,7 @@ interface DesignConfiguratorProps {
 
 // I am putting this client side component in the /configure/design route folder because it won't be used anywhere else besides on this design page
 const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfiguratorProps) => {
+  const {toast} = useToast();
   const { height, width } = imageDimensions;
 
   const [options, setOptions] = useState<{
@@ -37,11 +40,96 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
     finish: FINISHES.options[0],
   });
 
+  const [renderedDimension, setRenderedDimension] = useState({
+    width: width / 4,
+    height: height / 4,
+  });
+
+  const [renderedPosition, setRenderedPosition] = useState({
+    x: 0,
+    y: 205,
+  });
+
+  const phoneCaseRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { startUpload } = useUploadThing("imageUploader")
+
+  async function saveConfiguration() {
+    try {
+      // getBoundingClientRec(tangle) gives us the coordinates of our dom node ref
+      // bang sign means that we are sure that this method exists
+      // left is the left offset of the div ref from left edge of the page in px
+      const { left: caseLeft, top: caseTop, width, height } = phoneCaseRef.current!.getBoundingClientRect();
+      const { left: containerLeft, top: containerTop } = containerRef.current!.getBoundingClientRect();
+
+      // these calculations will tell us exactly where on the screen the image is
+      const leftOffset = caseLeft - containerLeft;
+      const topOffset = caseTop - containerTop;
+
+      // these values will tell us where the image is relative to the phone "canvas" 
+      const actualX = renderedPosition.x - leftOffset;
+      const actualY = renderedPosition.y - topOffset;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      const userImage = new Image();
+      userImage.crossOrigin = "anonymous";
+      userImage.src = imageUrl;
+      await new Promise((resolve) => (userImage.onload = resolve));
+
+      ctx?.drawImage(
+        userImage,
+        actualX,
+        actualY,
+        renderedDimension.width,
+        renderedDimension.height,
+      )
+
+      // converts image to base64 string
+      const base64 = canvas.toDataURL();
+      // we are just trying to get the image data string so we split on comma
+      const base64Data = base64.split(',')[1];
+
+      const blob = base64ToBlob(base64Data, "image/png");
+      const file = new File([blob], "filename.png", { type: "image/png" });
+
+      await startUpload([file], { configId });
+    } catch (error) {
+      toast({
+        title: "Something went wrong",
+        description: "There was a problem saving your config, please try again",
+        variant: "destructive",
+      })
+    }
+  }
+
+  function base64ToBlob(base64: string, mimeType: string) {
+    // this will convert the base64 to bytes
+    const byteCharacters = atob(base64);
+    // create an empty array with a slot for each byte character
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      // push unicode value of each byte character into an array 
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+
+    console.log('byte array:', byteArray);
+
+    // converting to byte array lets us turn our base64 string into a blob
+    return new Blob([byteArray], { type: mimeType });
+  }
+
   return (
     <div className='relative mt-20 grid grid-cols-1 lg:grid-cols-3 mb-20 pb-20'>
-      <div className="relative h-[37.5rem] overflow-hidden col-span-2 w-full max-w-4xl flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-400 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+      <div ref={containerRef} className="relative h-[37.5rem] overflow-hidden col-span-2 w-full max-w-4xl flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-400 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
         <div className='relative w-60 bg-opacity-60 pointer-events-none aspect-[896/1831]'>
-          <AspectRatio ratio={896 / 1831} className='pointer-events-none relative z-50 aspect-[896/1831] w-full'>
+          <AspectRatio ref={phoneCaseRef} ratio={896 / 1831} className='pointer-events-none relative z-50 aspect-[896/1831] w-full'>
             <NextImage fill alt='phone case template' src="/phone-template-no-logo.png" className='pointer-events-none z-50 select-none' />
           </AspectRatio>
           <div className='absolute z-40 inset-0 left-[3px] top-px right-[3px] bottom-px rounded-[32px] shadow-[0_0_0_99999px_rgba(229,231,235,0.6)]' />
@@ -53,6 +141,19 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
           height: height / 4,
           width: width / 4,
         }}
+          onResizeStop={(_, __, ref, ____, { x, y }) => {
+            setRenderedDimension({
+              // ref.style.height/width are strings in px eg: "50px"
+              height: parseInt(ref.style.height.slice(0, -2)),
+              width: parseInt(ref.style.width.slice(0, -2)),
+            })
+
+            setRenderedPosition({ x, y });
+          }}
+          onDragStop={(_, data) => {
+            const { x, y } = data;
+            setRenderedPosition({ x, y });
+          }}
           className='absolute z-20 border-[3px] border-yellow-800'
           lockAspectRatio
           resizeHandleComponent={{
@@ -100,7 +201,7 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" role='combobox' className='w-full justify-between'>
                         {options.model.label}
-                        <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50'/>
+                        <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
@@ -108,21 +209,21 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
                         <DropdownMenuItem key={model.label} className={cn("flex text-sm gap-1 items-center p-1.5 cursor-default hover:bg-zinc-100", {
                           "bg-zinc-200": model.label === options.model.label,
                         })}
-                        onClick={() => {
-                          setOptions((prev) => ({
-                            ...prev,
-                            model
-                          }))
-                        }}>
-                          <Check className={cn("mr-2 size-4", model.label === options.model.label ? "opacity-100" : "opacity-0")}/>
+                          onClick={() => {
+                            setOptions((prev) => ({
+                              ...prev,
+                              model
+                            }))
+                          }}>
+                          <Check className={cn("mr-2 size-4", model.label === options.model.label ? "opacity-100" : "opacity-0")} />
                           {model.label}
-                          </DropdownMenuItem>
+                        </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
 
-                {[MATERIALS, FINISHES].map(({name, options: selectableOptions}) => (
+                {[MATERIALS, FINISHES].map(({ name, options: selectableOptions }) => (
                   <RadioGroup key={name} value={options[name]} onChange={(val) => {
                     setOptions((prev) => ({
                       ...prev,
@@ -134,7 +235,7 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
                     </Label>
                     <div className='mt-3 space-y-4'>
                       {selectableOptions.map((option) => (
-                        <RadioGroup.Option key={option.value} value={option} className={({active, checked}) => cn("relative block cursor-pointer rounded-lg bg-white px-6 py-4 shadow-sm border-2 border-zinc-200 focus:outline-none ring-0 focus:ring-0 outline-none sm:flex sm:justify-between", {
+                        <RadioGroup.Option key={option.value} value={option} className={({ active, checked }) => cn("relative block cursor-pointer rounded-lg bg-white px-6 py-4 shadow-sm border-2 border-zinc-200 focus:outline-none ring-0 focus:ring-0 outline-none sm:flex sm:justify-between", {
                           "border-yellow-800": active || checked,
                         })}>
                           <span className='flex items-center'>
@@ -143,9 +244,9 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
                                 {option.label}
                               </RadioGroup.Label>
 
-                              {option.description && 
-                              <RadioGroup.Description as="span" className="text-gray-500">
-                                <span className='block sm:inline'>{option.description}</span>
+                              {option.description &&
+                                <RadioGroup.Description as="span" className="text-gray-500">
+                                  <span className='block sm:inline'>{option.description}</span>
                                 </RadioGroup.Description>}
                             </span>
                           </span>
@@ -166,15 +267,15 @@ const DesignConfigurator = ({ configId, imageUrl, imageDimensions }: DesignConfi
         </ScrollArea>
 
         <div className='w-full px-8 h-16 bg-white'>
-          <div className='h-px w-full bg-zinc-200'/>
+          <div className='h-px w-full bg-zinc-200' />
           <div className='size-full flex justify-end items-center'>
             <div className='w-full flex gap-6 items-center'>
               <p className='font-medium whitespace-nowrap'>
                 {formatPrice((BASE_PRICE + options.finish.price + options.material.price) / 100)}
               </p>
-              <Button size="sm" className='w-full bg-yellow-800'>
+              <Button onClick={() => saveConfiguration()} size="sm" className='w-full bg-yellow-800'>
                 Continue
-                <ArrowRight className='size-4 ml-1.5 inline'/>
+                <ArrowRight className='size-4 ml-1.5 inline' />
               </Button>
             </div>
           </div>

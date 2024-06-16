@@ -32,7 +32,7 @@ export const MODELS = {
       value: "iphone13",
     },
     {
-      label: "iPhone 15",
+      label: "iPhone 14",
       value: "iphone14",
     },
     {

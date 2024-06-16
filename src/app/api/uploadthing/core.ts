@@ -35,6 +35,7 @@ export const ourFileRouter = {
       const { width, height } = imgMetadata;
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
+      // first if statement creates a new configuration if no configId exists
       if (!configId) {
         const configuration = await db.configuration.create({
           data: {
@@ -45,6 +46,8 @@ export const ourFileRouter = {
         })
 
         return { configId: configuration.id }
+        // else statement comes in during 2nd step of custom phone case configuration where user will have cropped their image onto phone
+        // now there will be a configId from the initial picture upload, along with a croppedImage url
       } else {
         const updatedConfiguration = await db.configuration.update({
           where: {
