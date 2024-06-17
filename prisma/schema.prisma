@@ -13,10 +13,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// enums are a list of valid entries that aren't typed yet
+// they match our value that is passed from design configurator
+enum OrderStatus {
+  fulfilled
+  shipped
+  awaiting_shipment
+}
+
+enum PhoneModel {
+  iphonex
+  iphone11
+  iphone12
+  iphone13
+  iphone14
+  iphone15
+}
+
+enum CaseMaterial {
+  silicone
+  polycarbonate
+}
+
+enum CaseFinish {
+  smooth
+  textured
+}
+
+enum CaseColor {
+  black
+  blue
+  rose
+}
+
 model Configuration {
-  id              String  @id @default(cuid())
+  id              String        @id @default(cuid())
   width           Int
   height          Int
   imageUrl        String
   croppedImageUrl String? // optional bc in step 1 user will already have an image that is not cropped yet
+  color           CaseColor?
+  model           PhoneModel?
+  material        CaseMaterial?
+  finish          CaseFinish?
 }
