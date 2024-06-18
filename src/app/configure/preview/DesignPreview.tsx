@@ -6,20 +6,61 @@ import { BASE_PRICE, PRODUCT_PRICES } from '@/config/products'
 import { cn, formatPrice } from '@/lib/utils'
 import { COLORS, FINISHES, MODELS } from '@/validators/option-validator'
 import { Configuration } from '@prisma/client'
+import { useMutation } from '@tanstack/react-query'
 import { ArrowRight, Check } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import Confetti from 'react-dom-confetti'
+import { createCheckoutSession } from './actions'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/use-toast'
+import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import LoginModal from '@/components/LoginModal'
+
 
 
 const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
-  const [showConfetti, setShowConfetti] = useState(false);
-  const { color, model, finish, material } = configuration;
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const { color, model, finish, material, id } = configuration;
   const twColor = COLORS.find((supportedColor) => supportedColor.value === color)?.tw;
   const { label: modelLabel } = MODELS.options.find(({ value }) => value === model)!;
+  const { user } = useKindeBrowserClient();
+  console.log('USER FROM KINDE', user);
 
   let totalPrice = BASE_PRICE;
   if (material === "polycarbonate") totalPrice += PRODUCT_PRICES.material.polycarbonate;
   if (finish === "textured") totalPrice += PRODUCT_PRICES.finish.textured;
+
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const { mutate: createPaymentSession } = useMutation({
+    mutationKey: ["get-checkout-session"],
+    mutationFn: createCheckoutSession,
+    onSuccess: ({ url }) => {
+      if (url) router.push(url);
+      else throw new Error("Unable to retrieve payment URL.");
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong.",
+        description: "There was an error checking out, please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleCheckout = () => {
+    if (user) {
+      // create a payment session
+      createPaymentSession({configId: id});
+    } else {
+      // need to log in
+      // store the config id in local storage
+      localStorage.setItem("configurationId", id);
+      setIsLoginModalOpen(true);
+    }
+  }
 
   useEffect(() => {
     setShowConfetti(true);
@@ -33,6 +74,8 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
           spread: 90
         }} />
       </div>
+
+      <LoginModal isOpen={isLoginModalOpen} setIsOpen={setIsLoginModalOpen}/>
 
       <div className='mt-20 grid grid-cols-1 text-sm sm:grid-cols-12 sm:grid-rows-1 sm:gap-x-6 md:gap-x-8 lg:gap-x-12'>
         <div className='sm:col-span-4 md:col-span-3 md:row-span-2 md:row-end-2'>
@@ -88,7 +131,7 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
                   </div>
                 }
 
-                <div className='my-2 h-px bg-gray-200'/>
+                <div className='my-2 h-px bg-gray-200' />
                 <div className='flex items-center justify-between py-2'>
                   <p className='font-semibold text-gray-900'>Order total</p>
                   <p className='font-semibold text-gray-900'>
@@ -99,9 +142,9 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
             </div>
 
             <div className='mt-8 flex justify-end pb-12'>
-              <Button isLoading={true} loadingText="Loading" disabled={true} className='px-4 sm:px-6 lg:px-8 bg-yellow-800'>
-                Checkout <ArrowRight className='size-4 ml-1.5 inline'/>
-                </Button>
+              <Button onClick={() => handleCheckout()} isLoading={false} loadingText="Loading" disabled={false} className='px-4 sm:px-6 lg:px-8 bg-yellow-800'>
+                Checkout <ArrowRight className='size-4 ml-1.5 inline' />
+              </Button>
             </div>
           </div>
         </div>
