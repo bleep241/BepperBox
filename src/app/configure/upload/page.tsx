@@ -21,9 +21,9 @@ const Page = (props: Props) => {
     onClientUploadComplete: ([data]) => {
       const configId = data.serverData.configId;
       startTransition(() => {
-        // giving our design page a searchParam of "id" which nextjs will pass to it
+        // giving our design page a searchParam of "id" which nextjs will pass to the next route
         router.push(`/configure/design?id=${configId}`)
-      })
+      });
     },
     onUploadProgress(p) {
       setUploadProgress(p);

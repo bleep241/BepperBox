@@ -12,7 +12,7 @@ const Phone = ({imgSrc, className, dark = false, ...props}: PhoneProps) => {
       <img src={dark ? "/phone-template-dark-edges-no-logo.png" : "/phone-template-white-edges-no-logo.png"} className='pointer-events-none z-50 select-none' alt="image of the back of an iphone" />
 
       <div className='absolute -z-10 inset-0'>
-        <img src={imgSrc} className='object-cover' alt="custom image for back of phone case" />
+        <img src={imgSrc} className='object-cover size-full' alt="custom image for back of phone case" />
       </div>
     </div>
   )
