@@ -5,6 +5,7 @@ import React from 'react'
 import { getPaymentStatus } from './actions'
 import { useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
+import PhonePreview from '@/components/PhonePreview'
 
 type Props = {}
 
@@ -65,8 +66,12 @@ const ThankYou = () => {
         <div className='mt-10 border-t border-zinc-200'>
           <div className='mt-10 flex flex-auto flex-col'>
             <h4 className='font font-semibold text-zinc-900'>You made a great choice!</h4>
-            <p className='mt-2 text-sm text-zinc-600'>We at BepperBox believe that a phone case doesn't only need to look good, but also last you for the years to come. We offer a 5 year print warranty-- if you aren't happy with the qualityt of your purchase, we'll replace it for free.</p>
+            <p className='mt-2 text-sm text-zinc-600'>We at BepperBox believe that a phone case doesn't only need to look good, but also last you for the years to come. We offer a 5 year print warranty-- if you aren't happy with the quality of your purchase, we'll replace it for free.</p>
           </div>
+        </div>
+
+        <div className='flex space-x-6 overflow-hidden mt-4 rounded-xl bg-gray-900/5 ring-1 ring-inset ring-gray-900/10 lg:2xl:'>
+          <PhonePreview color={color!} croppedImageUrl={configuration.croppedImageUrl!}/>
         </div>
       </div>
     </div>
