@@ -51,7 +51,7 @@ const OrderReceivedEmail = ({
                   {orderId}
                 </Text>
               </Column>
-              <Column>
+              <Column style={{marginLeft: 20}}>
                 <Text style={global.paragraphWithBold}>
                   Order Date
                 </Text>

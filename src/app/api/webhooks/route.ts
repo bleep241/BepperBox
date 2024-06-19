@@ -70,7 +70,7 @@ export async function POST(req: Request) {
       });
 
       await resend.emails.send({
-        from: "BepperBox <ucanfindbillie@gmail.com>",
+        from: "BepperBox <bepis@bepperbox.com>",
         to: [event.data.object.customer_details.email],
         subject: "Thank you for your BepperBox order!",
         react: OrderReceivedEmail({
