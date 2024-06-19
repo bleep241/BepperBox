@@ -5,14 +5,17 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/toaster";
+import { constructMetadata } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 // const recursive = Recursive({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "BepperBox",
-  description: "Custom phone cases",
-};
+// export const metadata: Metadata = {
+//   title: "BepperBox",
+//   description: "Custom phone cases",
+// };
+
+export const metadata = constructMetadata();
 
 export default function RootLayout({
   children,
