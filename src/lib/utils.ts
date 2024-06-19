@@ -41,6 +41,7 @@ export function constructMetadata({
       description,
       images: [image],
     },
-    icons
+    icons,
+    metadataBase: new URL("https://bepperbox.vercel.app/")
   }
 }
